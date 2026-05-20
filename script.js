@@ -58,6 +58,20 @@ function calculate() {
     document.getElementById('finalBill').innerText = bill;
 }
 
+function switchMode(m) {
+    document.getElementById('tab-club').classList.toggle('active', m === 'club');
+    document.getElementById('tab-report').classList.toggle('active', m === 'report');
+    document.getElementById('tab-history').classList.toggle('active', m === 'history');
+
+    document.getElementById('input-section').classList.toggle('hidden', m !== 'club');
+    document.getElementById('report-section').classList.toggle('hidden', m !== 'report');
+    
+    if (m === 'history') {
+        document.getElementById('report-section').classList.remove('hidden');
+        showHistory();
+    }
+}
+
 function saveSalaryRecord() {
     let history = JSON.parse(localStorage.getItem('salaryHistory') || '[]');
     history.push({ date: new Date().getTime(), content: document.getElementById('finalBill').innerText });
@@ -67,36 +81,25 @@ function saveSalaryRecord() {
 
 function showHistory() {
     let history = JSON.parse(localStorage.getItem('salaryHistory') || '[]');
-    if(history.length === 0) { alert("沒有紀錄"); return; }
-    
     let reportArea = document.getElementById('finalBill');
-    reportArea.innerHTML = "--- 歷史紀錄 ---\n\n";
+    if(history.length === 0) { reportArea.innerText = "目前沒有紀錄"; return; }
     
+    reportArea.innerHTML = "--- 歷史紀錄 ---\n\n";
     history.forEach((h, i) => {
         let div = document.createElement('div');
-        div.style.borderBottom = "1px solid #444";
-        div.style.marginBottom = "15px";
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span>[${new Date(h.date).toLocaleDateString()}]</span>
-                <button onclick="deleteSingleRecord(${i})" style="background:none; border:none; color:red; font-size:20px; cursor:pointer;">✕</button>
-            </div>
-            <pre style="white-space:pre-wrap;">${h.content}</pre>
-        `;
+        div.style.cssText = "background:#1a1a1a; border:1px solid #333; margin-bottom:10px; padding:12px; border-radius:8px;";
+        div.innerHTML = `<div onclick="this.nextElementSibling.style.display=(this.nextElementSibling.style.display==='none'?'block':'none')" style="cursor:pointer; color:#00f2ff;">[${new Date(h.date).toLocaleDateString()}] 點擊展開詳情 <button onclick="event.stopPropagation(); deleteSingleRecord(${i})" style="color:red; background:none; border:none; cursor:pointer;">✕</button></div><pre style="display:none; white-space:pre-wrap;">${h.content}</pre>`;
         reportArea.appendChild(div);
     });
-    switchMode('report');
 }
 
 function deleteSingleRecord(index) {
+    if(!confirm("確定刪除？")) return;
     let history = JSON.parse(localStorage.getItem('salaryHistory') || '[]');
     history.splice(index, 1);
     localStorage.setItem('salaryHistory', JSON.stringify(history));
-    alert("已刪除");
     showHistory();
 }
 
-function switchMode(m) { document.getElementById('input-section').classList.toggle('hidden', m === 'report'); document.getElementById('report-section').classList.toggle('hidden', m !== 'report'); }
 function copyBill() { navigator.clipboard.writeText(document.getElementById('finalBill').innerText).then(() => alert("已複製！")); }
-function confirmAndGoToReport() { calculate(); switchMode('report'); }
 init();
