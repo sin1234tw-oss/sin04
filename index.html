@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小信家 - 薪資系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1 class="neon-text-pink">✨ 小信家 ✨</h1>
+        </header>
+
+        <nav class="tabs">
+            <button onclick="switchMode('club')" id="tab-club" class="active">酒店模式</button>
+            <button onclick="switchMode('report')" id="tab-report">薪資單</button>
+            <button onclick="switchMode('history')" id="tab-history">歷史紀錄</button>
+        </nav>
+
+        <main id="input-section" class="neon-card">
+            <div class="info-row">
+                <div class="input-group">
+                    <label>選擇店家</label>
+                    <select id="storeName" onchange="calculate()">
+                        <option value="威士登">威士登 (內建5%)</option>
+                        <option value="皇家">皇家</option>
+                        <option value="特南斯">特南斯</option>
+                        <option value="首席">首席</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>公關藝名</label>
+                    <input type="text" id="name" placeholder="輸入藝名..." oninput="calculate()">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>日期</label>
+                <input type="date" id="weekMonday" onchange="calculate()">
+            </div>
+
+            <h3 class="section-title neon-text-blue">每日節數統計</h3>
+            <div class="days-grid" id="daysGrid"></div>
+
+            <div class="price-row">
+                <span>每節檯價</span>
+                <input type="number" id="unitPrice" value="200" oninput="calculate()">
+            </div>
+
+            <h3 class="section-title neon-text-blue">扣項明細 (雜支)</h3>
+            <select onchange="addDeductionFromSelect(this)" style="margin-bottom:15px; width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444;">
+                <option value="">+ 新增扣項</option>
+                <option value="髮妝">髮妝</option>
+                <option value="餐點">餐點</option>
+                <option value="預支">預支</option>
+                <option value="清潔費">清潔費</option>
+                <option value="罰款">罰款</option>
+            </select>
+            <div id="deductionArea"></div>
+
+            <button onclick="switchMode('report')" class="btn-main neon-bg-blue" style="margin-top:20px; width:100%;">產生薪資單</button>
+        </main>
+
+        <section id="report-section" class="hidden">
+            <div class="neon-card report-card">
+                <pre id="finalBill"></pre>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                <button onclick="copyBill()" class="btn-main neon-bg-pink">複製明細</button>
+                <button onclick="saveSalaryRecord()" class="btn-main neon-bg-blue">保存本次紀錄</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
