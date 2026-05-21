@@ -7,9 +7,19 @@ function init() {
     days.forEach((day, i) => {
         grid.innerHTML += `<div><label>週${day}</label><input type="number" id="day${i}" placeholder="0" oninput="calculate()"></div>`;
     });
+    
+    // 初始化日期：設定為本週最近的週一 (強制使用本地時間)
     let d = new Date();
-    d.setDate(d.getDate() - d.getDay() + 1);
-    document.getElementById('weekMonday').value = d.toISOString().split('T')[0];
+    let day = d.getDay(); 
+    let diff = d.getDate() - (day === 0 ? 6 : day - 1); 
+    d.setDate(diff);
+    
+    // 格式化為 YYYY-MM-DD
+    let year = d.getFullYear();
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let date = String(d.getDate()).padStart(2, '0');
+    document.getElementById('weekMonday').value = `${year}-${month}-${date}`;
+    
     renderDeductions();
     calculate();
 }
@@ -46,13 +56,21 @@ function calculate() {
         totalUnits += val;
         dailyDetail += `${days[i]}：${val > 0 ? val : '休'}\n`;
     }
+    
+    // 嚴格處理日期：避免時區偏移
+    let [y, m, d] = document.getElementById('weekMonday').value.split('-').map(Number);
+    let monday = new Date(y, m - 1, d);
+    let sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    let dateRange = `${(monday.getMonth()+1)}/${monday.getDate()}-${(sunday.getMonth()+1)}/${sunday.getDate()}`;
+
     let price = Number(document.getElementById('unitPrice').value);
     let subtotal = totalUnits * price;
     const store = document.getElementById('storeName').value;
     deductions.forEach(d => { if(d.name === '稅金' && store === '威士登') d.amount = (subtotal > 0) ? Math.max(800, Math.min(3600, Math.round(subtotal * 0.05))) : 0; });
     
     let totalDeduction = deductions.reduce((s, d) => s + d.amount, 0);
-    let bill = `------------------\n每週薪資明細\n------------------\n藝名：${document.getElementById('name').value || '未填'}\n週期：${document.getElementById('weekMonday').value}\n店家：${store}\n------------------\n${dailyDetail}------------------\n總數：${totalUnits}\n檯價：${price}\n應領：$${subtotal.toLocaleString()}\n------------------\n扣項：\n`;
+    let bill = `------------------\n每週薪資明細\n------------------\n藝名：${document.getElementById('name').value || '未填'}\n週期：${dateRange}\n店家：${store}\n------------------\n${dailyDetail}------------------\n總數：${totalUnits}\n檯價：${price}\n應領：$${subtotal.toLocaleString()}\n------------------\n扣項：\n`;
     deductions.forEach(d => { if(d.amount > 0) bill += `${d.name}($${d.amount})\n`; });
     bill += `------------------\n💰 實領金額：$${(subtotal - totalDeduction).toLocaleString()}\n------------------\n辛苦囉！\n現在的努力都是未來的果實！\n加油！愛自己！`;
     document.getElementById('finalBill').innerText = bill;
@@ -62,14 +80,9 @@ function switchMode(m) {
     document.getElementById('tab-club').classList.toggle('active', m === 'club');
     document.getElementById('tab-report').classList.toggle('active', m === 'report');
     document.getElementById('tab-history').classList.toggle('active', m === 'history');
-
     document.getElementById('input-section').classList.toggle('hidden', m !== 'club');
-    document.getElementById('report-section').classList.toggle('hidden', m !== 'report');
-    
-    if (m === 'history') {
-        document.getElementById('report-section').classList.remove('hidden');
-        showHistory();
-    }
+    document.getElementById('report-section').classList.toggle('hidden', m !== 'report' && m !== 'history');
+    if (m === 'history') showHistory();
 }
 
 function saveSalaryRecord() {
@@ -83,7 +96,6 @@ function showHistory() {
     let history = JSON.parse(localStorage.getItem('salaryHistory') || '[]');
     let reportArea = document.getElementById('finalBill');
     if(history.length === 0) { reportArea.innerText = "目前沒有紀錄"; return; }
-    
     reportArea.innerHTML = "--- 歷史紀錄 ---\n\n";
     history.forEach((h, i) => {
         let div = document.createElement('div');
